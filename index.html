@@ -1,0 +1,167 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>Multithread.js by keithwhor</title>
+
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="wrapper">
+      <header>
+        <h1>Multithread.js</h1>
+        <p>In-browser multithreading made easy</p>
+
+        <p class="view"><a href="https://github.com/keithwhor/multithread">View the Project on GitHub <small>keithwhor/multithread</small></a></p>
+
+
+        <ul>
+          <li><a href="https://github.com/keithwhor/multithread/zipball/master">Download <strong>ZIP File</strong></a></li>
+          <li><a href="https://github.com/keithwhor/multithread/tarball/master">Download <strong>TAR Ball</strong></a></li>
+          <li><a href="https://github.com/keithwhor/multithread">View On <strong>GitHub</strong></a></li>
+        </ul>
+      </header>
+      <section>
+        <h1>
+<a name="multithread" class="anchor" href="#multithread"><span class="octicon octicon-link"></span></a>Multithread</h1>
+
+<p>In-browser multithreading made easy</p>
+
+<p>Multithread is a simple wrapper that eliminates the hassle of dealing with Web Workers and
+transferrable objects.</p>
+
+<p>Run any code you'd like asynchronously, in its own thread, without interrupting the user experience.</p>
+
+<h2>
+<a name="using-multithread" class="anchor" href="#using-multithread"><span class="octicon octicon-link"></span></a>Using Multithread</h2>
+
+<p>Using Multithread is simple. Include multithread.js on any page you'd like using</p>
+
+<div class="highlight highlight-html"><pre><span class="nt">&lt;script </span><span class="na">src=</span><span class="s">"my/path/to/multithread.js"</span><span class="nt">&gt;&lt;/script&gt;</span>
+</pre></div>
+
+<p>And instantiate it in any script tag using</p>
+
+<div class="highlight highlight-js"><pre><span class="kd">var</span> <span class="nx">num_threads</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+<span class="kd">var</span> <span class="nx">MT</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Multithread</span><span class="p">(</span><span class="nx">num_threads</span><span class="p">);</span>
+</pre></div>
+
+<p>Multithread will provide the best results when <code>num_threads</code> matches the processor core count of the computer
+you're using, but 2-4 threads should always be reasonably speedy.</p>
+
+<h2>
+<a name="running-a-thread-asynchronously" class="anchor" href="#running-a-thread-asynchronously"><span class="octicon octicon-link"></span></a>Running a Thread Asynchronously</h2>
+
+<p>The fun stuff! Running any code you want (in the form of a function) asynchronously, in a separate thread like so:</p>
+
+<div class="highlight highlight-js"><pre><span class="nx">MT</span><span class="p">.</span><span class="nx">process</span><span class="p">(</span><span class="kd">function</span><span class="p">,</span> <span class="nx">callback</span><span class="p">)(</span><span class="nx">arg1</span><span class="p">,</span> <span class="nx">arg2</span><span class="p">,</span> <span class="p">...,</span> <span class="nx">argN</span><span class="p">);</span>
+</pre></div>
+
+<p>Where <code>function</code> is of the form:</p>
+
+<div class="highlight highlight-js"><pre><span class="kd">function</span><span class="p">(</span><span class="nx">arg1</span><span class="p">,</span> <span class="nx">arg2</span><span class="p">,</span> <span class="p">...</span> <span class="nx">argN</span><span class="p">)</span> <span class="p">{</span>
+  <span class="cm">/* function body */</span>
+<span class="p">}</span>
+</pre></div>
+
+<p>and <code>callback</code> is of the form:</p>
+
+<div class="highlight highlight-js"><pre><span class="kd">function</span><span class="p">(</span><span class="nx">returnValue</span><span class="p">)</span> <span class="p">{</span>
+  <span class="cm">/* do something with returnValue in main thread */</span>
+<span class="p">}</span>
+</pre></div>
+
+<p>Note that <code>.process()</code> itself will return a function object that will not execute until explicitly
+told to do so.</p>
+
+<div class="highlight highlight-js"><pre><span class="kd">var</span> <span class="nx">funcInADifferentThread</span> <span class="o">=</span> <span class="nx">MT</span><span class="p">.</span><span class="nx">process</span><span class="p">(</span>
+  <span class="kd">function</span><span class="p">(</span><span class="nx">a</span><span class="p">,</span> <span class="nx">b</span><span class="p">)</span> <span class="p">{</span> <span class="k">return</span> <span class="nx">a</span> <span class="o">+</span> <span class="nx">b</span><span class="p">;</span> <span class="p">},</span>
+  <span class="kd">function</span><span class="p">(</span><span class="nx">r</span><span class="p">)</span> <span class="p">{</span> <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">r</span><span class="p">)</span> <span class="p">}</span>
+<span class="p">);</span>
+
+<span class="c1">// Nothing has happened,</span>
+<span class="c1">//funcInADifferentThread has not executed yet...</span>
+
+<span class="nx">funcInADifferentThread</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">);</span>
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">'Before or after?'</span><span class="p">);</span>
+
+<span class="c1">// We now see "Before or after?" logged in the console,</span>
+<span class="c1">// and "3" (= 1 + 2) logged shortly thereafter...</span>
+<span class="c1">// it was running asynchronously</span>
+</pre></div>
+
+<p>That's it! ... Almost.</p>
+
+<h2>
+<a name="scope-warning" class="anchor" href="#scope-warning"><span class="octicon octicon-link"></span></a>Scope Warning</h2>
+
+<p>Keep in mind that any threaded function is <strong>completely scope unaware</strong>, meaning something like:</p>
+
+<div class="highlight highlight-js"><pre><span class="kd">function</span> <span class="nx">scopeCheck</span><span class="p">()</span> <span class="p">{</span>
+  <span class="kd">var</span> <span class="nx">scopeVar</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+  <span class="nx">MT</span><span class="p">.</span><span class="nx">process</span><span class="p">(</span>
+    <span class="kd">function</span><span class="p">()</span> <span class="p">{</span> <span class="k">return</span> <span class="nx">scopeVar</span> <span class="o">+</span> <span class="mi">2</span><span class="p">;</span> <span class="p">},</span>
+    <span class="kd">function</span><span class="p">(</span><span class="nx">r</span><span class="p">)</span> <span class="p">{</span> <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">'Cool'</span><span class="p">);</span> <span class="p">}</span>
+  <span class="p">)();</span>
+<span class="p">}</span>
+<span class="nx">scopeCheck</span><span class="p">();</span>
+</pre></div>
+
+<p>Will throw <code>ReferenceError: scopeVar is not defined</code></p>
+
+<p>However, <strong>callbacks are scope aware</strong> so you needn't be as careful with them.</p>
+
+<h2>
+<a name="recursion" class="anchor" href="#recursion"><span class="octicon octicon-link"></span></a>Recursion</h2>
+
+<p>You can accomplish recursion simply by naming your functions as you pass them to Multithread</p>
+
+<div class="highlight highlight-js"><pre><span class="nx">MT</span><span class="p">.</span><span class="nx">process</span><span class="p">(</span>
+  <span class="kd">function</span> <span class="nx">Recurse</span><span class="p">(</span><span class="nx">m</span><span class="p">,</span> <span class="nx">n</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">if</span><span class="p">(</span><span class="nx">n</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+      <span class="k">return</span> <span class="nx">Recurse</span><span class="p">(</span><span class="nx">m</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="nx">n</span><span class="o">--</span><span class="p">);</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+      <span class="k">return</span> <span class="nx">m</span><span class="p">;</span>
+    <span class="p">}</span>
+  <span class="p">},</span>
+  <span class="kd">function</span><span class="p">(</span><span class="nx">r</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">r</span><span class="p">);</span>
+  <span class="p">}</span>
+<span class="p">)(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">2</span><span class="p">);</span>
+
+<span class="c1">// This will increase m twice recursively and log "7"</span>
+</pre></div>
+
+<h2>
+<a name="other-warnings" class="anchor" href="#other-warnings"><span class="octicon octicon-link"></span></a>Other Warnings</h2>
+
+<p>Be aware of the limitations of multithreading in JavaScript.</p>
+
+<p>All variables passed to functions must be JSON-serializable, meaning only Arrays, Objects, and base types (Number, String, Boolean, null). Same with return variables. No custom objects or prototypes.</p>
+
+<p>Objects and Arrays, as passed to any threaded function, will be deep-copied (passed by value, not reference).</p>
+
+<h2>
+<a name="thank-you" class="anchor" href="#thank-you"><span class="octicon octicon-link"></span></a>Thank You</h2>
+
+<p>Thanks, and have fun! :)</p>
+
+<p>Feedback is always appreciated. (Stars, forks, criticisms, you name it!)</p>
+
+<p>You can follow me on twitter at <a href="http://twitter.com/keithwhor">http://twitter.com/keithwhor</a> or visit my website at <a href="http://keithwhor.com/">http://keithwhor.com/</a></p>
+      </section>
+      <footer>
+        <p>This project is maintained by <a href="https://github.com/keithwhor">keithwhor</a></p>
+        <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></small></p>
+      </footer>
+    </div>
+    <script src="javascripts/scale.fix.js"></script>
+    
+  </body>
+</html>
