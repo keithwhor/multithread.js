@@ -52,9 +52,13 @@ function(returnValue) {
 Note that ```.process()``` itself will return a function object that will not execute until explicitly
 told to do so.
 ```js
-var funcInADifferentThread = MT.process(function(a, b) { return a + b; }, function(r) { console.log(r) });
+var funcInADifferentThread = MT.process(
+  function(a, b) { return a + b; },
+  function(r) { console.log(r) }
+);
 
-// Nothing has happened, funcInADifferentThread has not executed yet...
+// Nothing has happened,
+//funcInADifferentThread has not executed yet...
 
 funcInADifferentThread(1, 2);
 console.log('Before or after?');
@@ -74,8 +78,12 @@ Keep in mind that any threaded function is **completely scope unaware**, meaning
 ```js
 function scopeCheck() {
   var scopeVar = 2;
-  MT.process(function() { return scopeVar + 2; }, function(r) { console.log('Cool'); })();
+  MT.process(
+    function() { return scopeVar + 2; },
+    function(r) { console.log('Cool'); }
+  )();
 }
+scopeCheck();
 ```
 Will throw ```ReferenceError: scopeVar is not defined```
 
