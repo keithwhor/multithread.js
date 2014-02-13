@@ -34,7 +34,9 @@
         <h1>
 <a name="multithread" class="anchor" href="#multithread"><span class="octicon octicon-link"></span></a>Multithread</h1>
 
-<p>In-browser multithreading made easy</p>
+<p>In-browser multithreading made easy.</p>
+
+<p>Run any business logic you like without interrupting the user experience.</p>
 
 <p>Multithread is a simple wrapper that eliminates the hassle of dealing with Web Workers and
 transferrable objects.</p>
@@ -149,6 +151,8 @@ told to do so.</p>
 <p>All variables passed to functions must be JSON-serializable, meaning only Arrays, Objects, and base types (Number, String, Boolean, null). Same with return variables. No custom objects or prototypes.</p>
 
 <p>Objects and Arrays, as passed to any threaded function, will be deep-copied (passed by value, not reference).</p>
+
+<p>Additionally, threaded functions do not have access to the DOM.</p>
 
 <h2>
 <a name="thank-you" class="anchor" href="#thank-you"><span class="octicon octicon-link"></span></a>Thank You</h2>
