@@ -30,7 +30,7 @@ you're using, but 2-4 threads should always be reasonably speedy.
 Running a Thread Asynchronously
 -------------------------------
 
-The fun stuff! Running any code you want (in the form of a function) asynchronously, in a separate thread like so:
+The fun stuff! Run any code you want (in the form of a function) asynchronously, in a separate thread like so:
 ```js
 MT.process(function, callback)(arg1, arg2, ..., argN);
 ```
