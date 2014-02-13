@@ -1,7 +1,9 @@
 Multithread
 ===========
 
-In-browser multithreading made easy
+In-browser multithreading made easy.
+
+Run any business logic you like without interrupting the user experience.
 
 Multithread is a simple wrapper that eliminates the hassle of dealing with Web Workers and
 transferrable objects.
@@ -120,6 +122,8 @@ Be aware of the limitations of multithreading in JavaScript.
 All variables passed to functions must be JSON-serializable, meaning only Arrays, Objects, and base types (Number, String, Boolean, null). Same with return variables. No custom objects or prototypes.
 
 Objects and Arrays, as passed to any threaded function, will be deep-copied (passed by value, not reference).
+
+Additionally, threaded functions do not have access to the DOM.
 
 
 Thank You
