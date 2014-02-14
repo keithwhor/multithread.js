@@ -1,8 +1,7 @@
 !function() {
 
-	try {
-		var URL = window.URL || window.webkitURL;
-	} catch(e) {
+	var URL = window.URL || window.webkitURL;
+	if(!URL) {
 		throw new Error('This browser does not support Blob URLs');
 	}
 
@@ -17,67 +16,151 @@
 		this._debug = {
 			start: 0,
 			end: 0,
-			time: 0,
+			time: 0
 		};
 	}
 
-	Multithread.prototype._worker = function() {
-		/**/name/**/ = (/**/func/**/);
-		self.addEventListener('message', function(e) {
-			var data = e.data;
+	Multithread.prototype._worker = {
+		JSON: function() {
+			var /**/name/**/ = (/**/func/**/);
+			self.addEventListener('message', function(e) {
+				var data = e.data;
+				var view = new DataView(data);
+				var len = data.byteLength;
+				var str = Array(len);
+				for(var i=0;i<len;i++) {
+					str[i] = String.fromCharCode(view.getUint8(i));
+				}
+				var args = JSON.parse(str.join(''));
+				var value = (/**/name/**/).apply(/**/name/**/, args);
+				try {
+					data = JSON.stringify(value);
+				} catch(e) {
+					throw new Error('Parallel function must return JSON serializable response');
+				}
+				len = typeof(data)==='undefined'?0:data.length;
+				var buffer = new ArrayBuffer(len);
+				view = new DataView(buffer);
+				for(i=0;i<len;i++) {
+					view.setUint8(i, data.charCodeAt(i) & 255);
+				}
+				self.postMessage(buffer, [buffer]);
+			})
+		},
+		Int32: function() {
+			var /**/name/**/ = (/**/func/**/);
+			self.addEventListener('message', function(e) {
+				var data = e.data;
+				var view = new DataView(data);
+				var len = data.byteLength / 4;
+				var arr = Array(len);
+				for(var i=0;i<len;i++) {
+					arr[i] = view.getInt32(i*4);
+				}
+				var value = (/**/name/**/).apply(/**/name/**/, arr);
+				if(!(value instanceof Array)) { value = [value]; }
+				len = value.length;
+				var buffer = new ArrayBuffer(len * 4);
+				view = new DataView(buffer);
+				for(i=0;i<len;i++) {
+					view.setInt32(i*4, value[i]);
+				}
+				self.postMessage(buffer, [buffer]);
+			})
+		},
+		Float64: function() {
+			var /**/name/**/ = (/**/func/**/);
+			self.addEventListener('message', function(e) {
+				var data = e.data;
+				var view = new DataView(data);
+				var len = data.byteLength / 8;
+				var arr = Array(len);
+				for(var i=0;i<len;i++) {
+					arr[i] = view.getFloat64(i*8);
+				}
+				var value = (/**/name/**/).apply(/**/name/**/, arr);
+				if(!(value instanceof Array)) { value = [value]; }
+				len = value.length;
+				var buffer = new ArrayBuffer(len * 8);
+				view = new DataView(buffer);
+				for(i=0;i<len;i++) {
+					view.setFloat64(i*8, value[i]);
+				}
+				self.postMessage(buffer, [buffer]);
+			})
+		}
+	};
+
+	Multithread.prototype._encode = {
+		JSON: function(args) {
+			try {
+				var data = JSON.stringify(args);
+			} catch(e) {
+				throw new Error('Arguments provided to parallel function must be JSON serializable');
+			}
+			len = data.length;
+			var buffer = new ArrayBuffer(len);
+			var view = new DataView(buffer);
+			for(var i=0;i<len;i++) {
+				view.setUint8(i, data.charCodeAt(i) & 255);
+			}
+			return buffer;
+		},
+		Int32: function(args) {
+			len = args.length;
+			var buffer = new ArrayBuffer(len*4);
+			var view = new DataView(buffer);
+			for(var i=0;i<len;i++) {
+				view.setInt32(i*4, args[i]);
+			}
+			return buffer;
+		},
+		Float64: function(args) {
+			len = args.length;
+			var buffer = new ArrayBuffer(len*8);
+			var view = new DataView(buffer);
+			for(var i=0;i<len;i++) {
+				view.setFloat64(i*8, args[i]);
+			}
+			return buffer;
+		}
+	};
+
+	Multithread.prototype._decode = {
+		JSON: function(data) {
 			var view = new DataView(data);
 			var len = data.byteLength;
 			var str = Array(len);
 			for(var i=0;i<len;i++) {
 				str[i] = String.fromCharCode(view.getUint8(i));
 			}
-			var args = JSON.parse(str.join(''));
-			var value = (/**/name/**/).apply(/**/name/**/, args);
-			try {
-				data = JSON.stringify(value);
-			} catch(e) {
-				throw new Error('Parallel function must return JSON serializable response');
+			if(!str.length) {
+				return;
+			} else {
+				return JSON.parse(str.join(''));
 			}
-			len = typeof(data)==='undefined'?0:data.length;
-			var buffer = new ArrayBuffer(len);
-			view = new DataView(buffer);
-			for(i=0;i<len;i++) {
-				view.setUint8(i, data.charCodeAt(i) & 255);
+		},
+		Int32: function(data) {
+			var view = new DataView(data);
+			var len = data.byteLength / 4;
+			var arr = Array(len);
+			for(var i=0;i<len;i++) {
+				arr[i] = view.getInt32(i*4);
 			}
-			self.postMessage(buffer, [buffer]);
-		});
+			return arr;
+		},
+		Float64: function(data) {
+			var view = new DataView(data);
+			var len = data.byteLength / 8;
+			var arr = Array(len);
+			for(var i=0;i<len;i++) {
+				arr[i] = view.getFloat64(i*8);
+			}
+			return arr;
+		},
 	};
 
-	Multithread.prototype._encode = function(args) {
-		try {
-			var data = JSON.stringify(args);
-		} catch(e) {
-			throw new Error('Arguments provided to parallel function must be JSON serializable');
-		}
-		len = data.length;
-		var buffer = new ArrayBuffer(len);
-		var view = new DataView(buffer);
-		for(var i=0;i<len;i++) {
-			view.setUint8(i, data.charCodeAt(i) & 255);
-		}
-		return buffer;
-	};
-
-	Multithread.prototype._decode = function(data) {
-		var view = new DataView(data);
-		var len = data.byteLength;
-		var str = Array(len);
-		for(var i=0;i<len;i++) {
-			str[i] = String.fromCharCode(view.getUint8(i));
-		}
-		if(!str.length) {
-			return;
-		} else {
-			return JSON.parse(str.join(''));
-		}
-	};
-
-	Multithread.prototype._execute = function(script, args, callback) {
+	Multithread.prototype._execute = function(script, args, type, callback) {
 		if(!this._activeThreads) {
 			this._debug.start = (new Date).valueOf();
 		}
@@ -86,16 +169,25 @@
 			var t = (new Date()).valueOf();
 			var resource = URL.createObjectURL(new Blob([script], {type: 'text/javascript'}))
 			var worker = new Worker(resource);
-			var buffer = this._encode(args);
-			var decode = this._decode;
+			var buffer = this._encode[type](args);
+			var decode = this._decode[type];
 			var ready = this.ready.bind(this);
 			var self = this;
-			var listener = function(e) {
-				callback.call(self, decode(e.data), (new Date).valueOf() - t);
-				URL.revokeObjectURL(resource);
-				this.terminate();
-				ready();
-			};
+			if(type==='JSON') {
+				var listener = function(e) {
+					callback.call(self, decode(e.data));
+					URL.revokeObjectURL(resource);
+					this.terminate();
+					ready();
+				};
+			} else {
+				var listener = function(e) {
+					callback.apply(self, decode(e.data));
+					URL.revokeObjectURL(resource);
+					this.terminate();
+					ready();
+				};
+			}
 			worker.addEventListener('message', listener);
 			worker.postMessage(buffer, [buffer]);
 		} else {
@@ -113,7 +205,7 @@
 		}
 	};
 
-	Multithread.prototype.process = function(fn, callback) {
+	Multithread.prototype._prepare = function(fn, type) {
 
 		fn = fn;
 		var name = fn.name;
@@ -125,17 +217,46 @@
 			}
 		}
 
-		var script = this._worker
+		var script = this._worker[type]
 			.toString()
 			.replace(/^.*?[\n\r]+/gi, '')
 			.replace(/\}[\s]*$/, '')
 			.replace(/\/\*\*\/name\/\*\*\//gi, name)
 			.replace(/\/\*\*\/func\/\*\*\//gi, fnStr);
 
+		return script;
+
+	};
+
+	Multithread.prototype.process = function(fn, callback) {
+
+		var script = this._prepare(fn, 'JSON');
 		var self = this;
 
 		return function() {
-			self._execute(script, [].slice.call(arguments), callback)
+			self._execute(script, [].slice.call(arguments), 'JSON', callback)
+		};
+
+	};
+
+	Multithread.prototype.processInt32 = function(fn, callback) {
+
+		var script = this._prepare(fn, 'Int32');
+		var self = this;
+
+		return function() {
+			self._execute(script, [].slice.call(arguments), 'Int32', callback)
+		};
+
+	};
+
+	Multithread.prototype.processFloat64 = function(fn, callback) {
+
+		var script = this._prepare(fn, 'Float64');
+		var self = this;
+
+		return function() {
+			self._execute(script, [].slice.call(arguments), 'Float64', callback)
 		};
 
 	};
