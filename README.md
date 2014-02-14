@@ -77,8 +77,10 @@ Special Data Types
 Multithread.js uses JSON serialization with ```.process()``` so you can deal with your threaded,
 asynchronous functions like you'd deal with normal JavaScript functions.
 
+
 However, optimized support is also provided for typed data, specifically ```Int32``` and ```Float64``` 
 (being signed 32-bit integers and 64-bit floats, respectively).
+
 
 You can access these using...
 
@@ -91,7 +93,7 @@ var threadedInt32Func = MT.processInt32(
   function(int32_returnValue1, int32_returnValue2, ..., int32_returnValueN) {
     /* main thread callback */
   }
-)
+);
 
 // Only deal with 64-bit floats...
 var threadedFloat64Func = MT.processFloat64(
@@ -116,15 +118,14 @@ threadedInt32Func.apply(null, [32, 64, 128, 256])
 Note that threaded functions can not have their context set, so the first argument to ```.apply``` should
 always be ```null```.
 
-Additionally, a keen observe would detect that the ```callback``` format is also a little bit different.
 
-The return from a ```.processInt32``` or ```.processFloat64``` threaded function can be a single value or Array.
+Additionally, a keen observer would detect that the ```callback``` format is also a little bit different. The return from a ```.processInt32``` or ```.processFloat64``` threaded function can be a single value or Array.
+
 
 The arguments sent to ```callback``` are the values of a returned array, in order, or just a single argument
-representing a single returned value.
-
-The argument list can be accessed via the magic ```arguments``` object, but you may want built-in Array
-functionality, in which case you can convert this arguments object into an array:
+representing a single returned value. These values can be accessed via the magic ```arguments``` object,
+but you may want built-in Array functionality, in which case you can convert this arguments object into
+an array:
 
 ```js
 // your callback
@@ -183,9 +184,12 @@ Limitations
 
 Be aware of the limitations of multithreading in JavaScript.
 
+
 All variables passed to functions must be JSON-serializable, meaning only Arrays, Objects, and base types (Number, String, Boolean, null). Same with return variables. No custom objects or prototypes.
 
+
 Objects and Arrays, as passed to any threaded function, will be deep-copied (passed by value, not reference).
+
 
 Additionally, threaded functions do not have access to the DOM.
 
@@ -195,7 +199,9 @@ Thank You
 
 Thanks, and have fun! :)
 
+
 Feedback is always appreciated. (Stars, forks, criticisms, you name it!)
+
 
 You can follow me on twitter at http://twitter.com/keithwhor or visit my website at http://keithwhor.com/
 
