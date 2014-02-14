@@ -101,6 +101,63 @@ told to do so.</p>
 <span class="c1">// it was running asynchronously</span>
 </pre></div>
 
+<h2>
+<a name="special-data-types" class="anchor" href="#special-data-types"><span class="octicon octicon-link"></span></a>Special Data Types</h2>
+
+<p>Multithread.js uses JSON serialization with <code>.process()</code> so you can deal with your threaded,
+asynchronous functions like you'd deal with normal JavaScript functions.</p>
+
+<p>However, optimized support is also provided for typed data, specifically <code>Int32</code> and <code>Float64</code> 
+(being signed 32-bit integers and 64-bit floats, respectively).</p>
+
+<p>You can access these using...</p>
+
+<div class="highlight highlight-js"><pre><span class="c1">// Only deal with 32-bit signed integers...</span>
+<span class="kd">var</span> <span class="nx">threadedInt32Func</span> <span class="o">=</span> <span class="nx">MT</span><span class="p">.</span><span class="nx">processInt32</span><span class="p">(</span>
+  <span class="kd">function</span><span class="p">(</span><span class="nx">int32_arg1</span><span class="p">,</span> <span class="nx">int32_arg2</span><span class="p">,</span> <span class="p">...,</span> <span class="nx">int32_argN</span><span class="p">)</span> <span class="p">{</span>
+    <span class="cm">/* function body */</span>
+  <span class="p">},</span>
+  <span class="kd">function</span><span class="p">(</span><span class="nx">int32_returnValue1</span><span class="p">,</span> <span class="nx">int32_returnValue2</span><span class="p">,</span> <span class="p">...,</span> <span class="nx">int32_returnValueN</span><span class="p">)</span> <span class="p">{</span>
+    <span class="cm">/* main thread callback */</span>
+  <span class="p">}</span>
+<span class="p">);</span>
+
+<span class="c1">// Only deal with 64-bit floats...</span>
+<span class="kd">var</span> <span class="nx">threadedFloat64Func</span> <span class="o">=</span> <span class="nx">MT</span><span class="p">.</span><span class="nx">processFloat64</span><span class="p">(</span>
+  <span class="kd">function</span><span class="p">(</span><span class="nx">float64_arg1</span><span class="p">,</span> <span class="nx">float64_arg2</span><span class="p">,</span> <span class="p">...,</span> <span class="nx">float64_argN</span><span class="p">)</span> <span class="p">{</span>
+    <span class="cm">/* function body */</span>
+  <span class="p">},</span>
+  <span class="kd">function</span><span class="p">(</span><span class="nx">float64_returnValue1</span><span class="p">,</span> <span class="nx">float64_returnValue2</span><span class="p">,</span> <span class="p">...,</span> <span class="nx">float64_returnValueN</span><span class="p">)</span> <span class="p">{</span>
+    <span class="cm">/* main thread callback */</span>
+  <span class="p">}</span>
+<span class="p">);</span>
+</pre></div>
+
+<p>You may notice that the threaded functions take an argument list of Int32 and Float64 data,
+and the most common use case is more likely an array of data. In this case, feel free to use
+Javascript's <code>Function.prototype.apply(context, argArray)</code> to send your array as an argument list.</p>
+
+<div class="highlight highlight-js"><pre><span class="c1">// Use Function.apply to send arguments as an array</span>
+<span class="nx">threadedInt32Func</span><span class="p">.</span><span class="nx">apply</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="p">[</span><span class="mi">32</span><span class="p">,</span> <span class="mi">64</span><span class="p">,</span> <span class="mi">128</span><span class="p">,</span> <span class="mi">256</span><span class="p">])</span>
+</pre></div>
+
+<p>Note that threaded functions can not have their context set, so the first argument to <code>.apply</code> should
+always be <code>null</code>.</p>
+
+<p>Additionally, a keen observer would detect that the <code>callback</code> format is also a little bit different. The return from a <code>.processInt32</code> or <code>.processFloat64</code> threaded function can be a single value or Array.</p>
+
+<p>The arguments sent to <code>callback</code> are the values of a returned array, in order, or just a single argument
+representing a single returned value. These values can be accessed via the magic <code>arguments</code> object,
+but you may want built-in Array functionality, in which case you can convert this arguments object into
+an array:</p>
+
+<div class="highlight highlight-js"><pre><span class="c1">// your callback</span>
+<span class="kd">function</span> <span class="nx">callback</span><span class="p">()</span> <span class="p">{</span>
+  <span class="kd">var</span> <span class="nx">argumentArray</span> <span class="o">=</span> <span class="p">[].</span><span class="nx">slice</span><span class="p">.</span><span class="nx">call</span><span class="p">(</span><span class="nx">arguments</span><span class="p">);</span>
+  <span class="cm">/* do something with your argumentArray here */</span>
+<span class="p">}</span>
+</pre></div>
+
 <p>That's it! ... Almost.</p>
 
 <h2>
@@ -144,7 +201,7 @@ told to do so.</p>
 </pre></div>
 
 <h2>
-<a name="other-warnings" class="anchor" href="#other-warnings"><span class="octicon octicon-link"></span></a>Other Warnings</h2>
+<a name="limitations" class="anchor" href="#limitations"><span class="octicon octicon-link"></span></a>Limitations</h2>
 
 <p>Be aware of the limitations of multithreading in JavaScript.</p>
 
