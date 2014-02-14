@@ -191,7 +191,7 @@
 			worker.addEventListener('message', listener);
 			worker.postMessage(buffer, [buffer]);
 		} else {
-			this._queue.push([script, args, callback]);
+			this._queue.push([script, args, type, callback]);
 		}
 	};
 
