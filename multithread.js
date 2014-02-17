@@ -12,6 +12,7 @@
 	function Multithread(threads) {
 		this.threads = Math.max(2, threads | 0);
 		this._queue = [];
+		this._queueSize = 0;
 		this._activeThreads = 0;
 		this._debug = {
 			start: 0,
@@ -45,6 +46,7 @@
 					view.setUint8(i, data.charCodeAt(i) & 255);
 				}
 				self.postMessage(buffer, [buffer]);
+				self.close();
 			})
 		},
 		Int32: function() {
@@ -66,6 +68,7 @@
 					view.setInt32(i*4, value[i]);
 				}
 				self.postMessage(buffer, [buffer]);
+				self.close();
 			})
 		},
 		Float64: function() {
@@ -87,6 +90,7 @@
 					view.setFloat64(i*8, value[i]);
 				}
 				self.postMessage(buffer, [buffer]);
+				self.close();
 			})
 		}
 	};
@@ -160,54 +164,52 @@
 		},
 	};
 
-	Multithread.prototype._execute = function(script, args, type, callback) {
+	Multithread.prototype._execute = function(resource, args, type, callback) {
 		if(!this._activeThreads) {
 			this._debug.start = (new Date).valueOf();
 		}
 		if(this._activeThreads < this.threads) {
 			this._activeThreads++;
 			var t = (new Date()).valueOf();
-			var resource = URL.createObjectURL(new Blob([script], {type: 'text/javascript'}))
 			var worker = new Worker(resource);
 			var buffer = this._encode[type](args);
 			var decode = this._decode[type];
-			var ready = this.ready.bind(this);
 			var self = this;
 			if(type==='JSON') {
 				var listener = function(e) {
 					callback.call(self, decode(e.data));
-					URL.revokeObjectURL(resource);
-					this.terminate();
-					ready();
+					self.ready();
 				};
 			} else {
 				var listener = function(e) {
 					callback.apply(self, decode(e.data));
-					URL.revokeObjectURL(resource);
-					this.terminate();
-					ready();
+					self.ready();
 				};
 			}
 			worker.addEventListener('message', listener);
 			worker.postMessage(buffer, [buffer]);
 		} else {
-			this._queue.push([script, args, type, callback]);
+			this._queueSize++;
+			this._queue.push([resource, args, type, callback]);
 		}
 	};
 
 	Multithread.prototype.ready = function() {
 		this._activeThreads--;
-		if(this._queue.length) {
+		if(this._queueSize) {
 			this._execute.apply(this, this._queue.shift());
+			this._queueSize--;
 		} else if(!this._activeThreads) {
 			this._debug.end = (new Date).valueOf();
 			this._debug.time = this._debug.end - this._debug.start;
+			console.log('Took ' + this._debug.time + 'ms');
 		}
 	};
 
 	Multithread.prototype._prepare = function(fn, type) {
 
 		fn = fn;
+
 		var name = fn.name;
 		var fnStr = fn.toString();
 		if(!name) {
@@ -224,39 +226,41 @@
 			.replace(/\/\*\*\/name\/\*\*\//gi, name)
 			.replace(/\/\*\*\/func\/\*\*\//gi, fnStr);
 
-		return script;
+		var resource = URL.createObjectURL(new Blob([script], {type: 'text/javascript'}));
+
+		return resource;
 
 	};
 
 	Multithread.prototype.process = function(fn, callback) {
 
-		var script = this._prepare(fn, 'JSON');
+		var resource = this._prepare(fn, 'JSON');
 		var self = this;
 
 		return function() {
-			self._execute(script, [].slice.call(arguments), 'JSON', callback)
+			self._execute(resource, [].slice.call(arguments), 'JSON', callback)
 		};
 
 	};
 
 	Multithread.prototype.processInt32 = function(fn, callback) {
 
-		var script = this._prepare(fn, 'Int32');
+		var resource = this._prepare(fn, 'Int32');
 		var self = this;
 
 		return function() {
-			self._execute(script, [].slice.call(arguments), 'Int32', callback)
+			self._execute(resource, [].slice.call(arguments), 'Int32', callback)
 		};
 
 	};
 
 	Multithread.prototype.processFloat64 = function(fn, callback) {
 
-		var script = this._prepare(fn, 'Float64');
+		var resource = this._prepare(fn, 'Float64');
 		var self = this;
 
 		return function() {
-			self._execute(script, [].slice.call(arguments), 'Float64', callback)
+			self._execute(resource, [].slice.call(arguments), 'Float64', callback)
 		};
 
 	};
