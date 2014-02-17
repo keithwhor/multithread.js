@@ -202,7 +202,6 @@
 		} else if(!this._activeThreads) {
 			this._debug.end = (new Date).valueOf();
 			this._debug.time = this._debug.end - this._debug.start;
-			console.log('Took ' + this._debug.time + 'ms');
 		}
 	};
 
